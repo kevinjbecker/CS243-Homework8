@@ -1,4 +1,5 @@
-#define _POSIX_SOURCE
+#define _BSD_SOURCE
+#include <unistd.h>
 #include <pthread.h>
 #include <string.h>
 #include "display.h"
@@ -6,12 +7,12 @@
 
 #define MICRO_SEC_TO_MILLIS 1000
 
-static long wait;
+static long waitTime;
 
 void initRacers( long milliseconds )
 {
     // sets the wait to the milliseconds specified
-    wait = milliseconds;
+    waitTime = milliseconds;
 }
 
 Racer *makeRacer(char *name, int position)
@@ -88,7 +89,7 @@ void *run( void *racer )
         // unlocks the critical region for a racer to go in
         pthread_mutex_unlock(&mutex);
         // sleeps for a random amount of time (max wait)
-        //usleep((rand() / wait) * MICRO_SEC_TO_MILLIS);
+        usleep((rand() % waitTime) * MICRO_SEC_TO_MILLIS);
     }
     return NULL;
 }
