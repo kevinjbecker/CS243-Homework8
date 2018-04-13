@@ -1,6 +1,8 @@
 #define _POSIX_SOURCE
 #include <pthread.h>
 #include <string.h>
+#include "display.h"
+#include "racer.h"
 
 #define MICRO_SEC_TO_MILLIS 1000
 
@@ -27,7 +29,7 @@ Racer *makeRacer(char *name, int position)
     // if we make it here, malloc was successful
     racer->dist = 1;
     racer->row = position;
-    // allocate space for the name
+    // allocate space for the name + NUL
     racer->graphic = malloc(MAX_NAME_LEN + 1);
     // make sure the allocation succeeded
     if(racer->graphic == NULL)
@@ -41,15 +43,13 @@ Racer *makeRacer(char *name, int position)
     return racer;
 }
 
-void destoryRacer(Racer *racer)
+void destroyRacer(Racer *racer)
 {
     // nothing we need to do if the racer is alread null
     if(racer == NULL)
         return;
-
     // frees the graphic (since it was allocated on the heap)
     free(racer->graphic);
-    // set the graphic to NULL (for keeping things clean)
     racer->graphic = NULL;
     // free the racer itself; racer destroyed
     free(racer);
@@ -70,25 +70,27 @@ void destoryRacer(Racer *racer)
 ///
 void *run( void *racer )
 {
+    return NULL;
     // casts our racer to something we know
     Racer * rcr = (Racer *)racer;
-    
+
     // makes a mutex which is static to all threads
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     // keeps going until we're at the finish line
-    while(rcr->position < FINISH_LINE)
+    while(rcr->dist < FINISH_LINE)
     {
         // locks the mutex so we can print ourself out
         pthread_mutex_lock(&mutex);
         // BEGIN CRITIAL REGION
         set_cur_pos(rcr->row, rcr->dist++);
-        printf(" %s", rcr->display);
+        printf(" %s", rcr->graphic);
         fflush(stdout);
         // END CRITIAL REGION
         // unlocks the critical region for a racer to go in
-        pthread_mutex_unlock(&mutex)
+        pthread_mutex_unlock(&mutex);
         // sleeps for a random amount of time (max wait)
-        usleep(rand(wait) * MICRO_SEC_TO_MILLIS);
+        //usleep((rand() / wait) * MICRO_SEC_TO_MILLIS);
     }
+    return NULL;
 }

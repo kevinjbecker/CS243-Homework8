@@ -2,43 +2,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <thread.h>
+#include <pthread.h>
+#include "display.h"
 #include "racer.h"
 
 #define GENERIC_USAGE "Usage: %s [delay] racer1 racer2 [racer3...]\n"
 #define NAME_TOO_LONG "Usage: racer names must not exceed length 9.\n"
 #define INVALID_DELAY "Delay %d is invlid.\n"
 
-static char *padName(char *curName)
+static void padName(char *curName, char *paddedName)
 {
     // the length remaining to make
     size_t nameLen = strlen(curName);
-    // if the name is max already, we can return (waste of time otherwise)
+
+    // if the name is max already, we can copy and exit (waste of time otherwise)
     if(nameLen == MAX_NAME_LEN)
-        return curName;
+    {
+        strcpy(paddedName, curName);
+        return;
+    }
 
     // the name we will return (MAX_NAME_LEN + 1 for the terminating NUL)
     char retName [MAX_NAME_LEN + 1];
-    // places NUL terminator
-    retName[MAX_NAME_LEN-1] = '\0';
+    retName[MAX_NAME_LEN] = '\0';
+
     // the number of underscores before and after
     size_t before = (MAX_NAME_LEN - nameLen) / 2;
-    // after is special we might need to addd 1 if the nameLen is EVEN
-    size_t after = ((MAX_NAME_LEN - nameLen) / 2) + (nameLen % 2 == 0) ? 1 : 0;
 
     // sets the first underscores in place
     for(size_t i = 0; i < before; ++i)
         retName[i] = '_';
 
     // copies in the name
-    strcpy(retName+((MAX_NAME_LEN - nameLen)/2), name);
+    strcpy(retName+((MAX_NAME_LEN - nameLen)/2), curName);
 
     // sets the last underscores in place
     for(size_t i = before + nameLen; i < MAX_NAME_LEN; ++i)
         retName[i] = '_';
 
-    // finally we return our padded name
-    return retName;
+    // finally we put our padded name into place
+    strcpy(paddedName, retName);
 }
 
 
@@ -66,7 +69,7 @@ int main(int argc, char **argv)
     }
 
     // last minute check to make sure all names are small enough 9 characters
-    for(int i = racersStartIndex; i < argc; ++i)
+    for(int i = racerStartIndex; i < argc; ++i)
         if(strlen(argv[i]) > MAX_NAME_LEN)
         {
             fputs(NAME_TOO_LONG, stderr);
@@ -76,18 +79,21 @@ int main(int argc, char **argv)
     // BEGIN BUILDING OUR RUN ==================================================
     // creates an array to house our threads in
     pthread_t racerThreads[argc-racerStartIndex];
-    // creates an array to house our racers
+    // creates an array to house our racer pointers
     Racer *racers[argc-racerStartIndex];
 
     // seeds the random generator
     srand(10);
-    // initializes the racer class
+    // initializes the racer wait
     initRacers(racerWait);
 
     // loop to create all the racers
-    for(int i = racerStartIndex; i < numRacers; ++i)
-        racers[i] = makeRacer(padName(argv[i]), i-racerStartindex);
-
+    for(int i = racerStartIndex; i < argc; ++i)
+    {
+        char paddedName[MAX_NAME_LEN + 1];
+        padName(argv[i], paddedName);
+        racers[i-racerStartIndex] = makeRacer(paddedName, i-racerStartIndex);
+    }
     // clears the screen right before we go
     clear();
 
@@ -100,12 +106,12 @@ int main(int argc, char **argv)
     {
         // we don't care about the retval, we can set that to NULL
         pthread_join(racerThreads[i], NULL);
-        // destroys the racer
+        // destroys the racer (FUCKING SEGFAULT?????)
         destroyRacer(racers[i]);
     }
 
     // sets our cursor to the bottom row
-    set_cur_pos(argc-racerStartIndex, 0);
+    // set_cur_pos(argc-racerStartIndex, 0);
     // attempt to read in the first argument as number
     return EXIT_SUCCESS;
 }
