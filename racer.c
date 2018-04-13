@@ -1,4 +1,16 @@
+#define _POSIX_SOURCE
 #include <pthread.h>
+#include <string.h>
+
+#define MICRO_SEC_TO_MILLIS 1000
+
+static long wait;
+
+void initRacers( long milliseconds )
+{
+    // sets the wait to the milliseconds specified
+    wait = milliseconds;
+}
 
 Racer *makeRacer(char *name, int position)
 {
@@ -41,4 +53,42 @@ void destoryRacer(Racer *racer)
     racer->graphic = NULL;
     // free the racer itself; racer destroyed
     free(racer);
+}
+
+/// run Run one racer in the race.
+/// Initialize the display of the racer*:
+///   The racer starts at the start position, column 1.
+///   The racer's graphic (text name ) is displayed.
+/// This action happens repetitively, until its position is at FINISH_LINE:
+///   Randomly calculate a waiting period, no more than
+///   the value given to initRacers
+///   Sleep for that length of time.
+///   Change the display position of this racer by +1 column*:
+///     Erase the racer's name from the display.
+///     Update the racer's dist field by +1.
+///     Display the racer's name at the new position.
+///
+void *run( void *racer )
+{
+    // casts our racer to something we know
+    Racer * rcr = (Racer *)racer;
+    
+    // makes a mutex which is static to all threads
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    // keeps going until we're at the finish line
+    while(rcr->position < FINISH_LINE)
+    {
+        // locks the mutex so we can print ourself out
+        pthread_mutex_lock(&mutex);
+        // BEGIN CRITIAL REGION
+        set_cur_pos(rcr->row, rcr->dist++);
+        printf(" %s", rcr->display);
+        fflush(stdout);
+        // END CRITIAL REGION
+        // unlocks the critical region for a racer to go in
+        pthread_mutex_unlock(&mutex)
+        // sleeps for a random amount of time (max wait)
+        usleep(rand(wait) * MICRO_SEC_TO_MILLIS);
+    }
 }
