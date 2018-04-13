@@ -70,10 +70,8 @@ void destroyRacer(Racer *racer)
 ///
 void *run( void *racer )
 {
-    return NULL;
     // casts our racer to something we know
     Racer * rcr = (Racer *)racer;
-
     // makes a mutex which is static to all threads
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 

@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     {
         char paddedName[MAX_NAME_LEN + 1];
         padName(argv[i], paddedName);
-        racers[i-racerStartIndex] = makeRacer(paddedName, i-racerStartIndex);
+        racers[i-racerStartIndex] = makeRacer(paddedName, i-racerStartIndex+1);
     }
     // clears the screen right before we go
     clear();
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     }
 
     // sets our cursor to the bottom row
-    // set_cur_pos(argc-racerStartIndex, 0);
+    set_cur_pos(argc-racerStartIndex+1, 0);
     // attempt to read in the first argument as number
     return EXIT_SUCCESS;
 }
