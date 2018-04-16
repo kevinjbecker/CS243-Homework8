@@ -83,6 +83,8 @@ void *run( void *racer )
         pthread_mutex_lock(&mutex);
         // BEGIN CRITIAL REGION
         set_cur_pos(rcr->row, rcr->dist++);
+        /* the space before is to remove the trailing underscore (makes sure
+           that the only printed characters are the 9 wanted */
         printf(" %s", rcr->graphic);
         fflush(stdout);
         // END CRITIAL REGION
