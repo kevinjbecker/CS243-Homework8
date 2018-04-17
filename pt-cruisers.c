@@ -15,6 +15,7 @@
 #include "display.h"
 #include "racer.h"
 
+// MACROS for our three usage messages
 #define GENERIC_USAGE "Usage: %s [delay] racer1 racer2 [racer3...]\n"
 #define NAME_TOO_LONG "Usage: racer names must not exceed length 9.\n"
 #define INVALID_DELAY "Delay %li is invalid.\n"
@@ -73,32 +74,37 @@ static void padName(char *curName, char *paddedName)
 ///
 int main(int argc, char **argv)
 {
-    /* there should at least be 3 arguments (program, racer1, racer2)
+    /* at minimum there needs to be 3 arguments (program, racer1, racer2)
        if argc is less than 3 we *definitely* have a problem */
     if(argc < 3)
     {
-        // print usage message to
+        // print usage message to stderr and exit
         fprintf(stderr, GENERIC_USAGE, argv[0]);
         return EXIT_FAILURE;
     }
 
-    // the numer of millis a racer will wait
-    long waitTime = DEFAULT_WAIT;
-    // the argv index where the racer names begin
-    int racerStartIndex = 1;
+    /* the argv index where the racer names begin (defaults to 2,
+       but will be changed to 1 if it determined the first arg is
+       not a number) */
+    int racerStartIndex = 2;
 
-    // if the first character in argv[1] is numeric we get the wait
-    if(argv[1][0] >= '0' && argv[1][0] <= '9')
+    /* the numer of millis a racer will wait (attempt to read in the first
+       argument as a number) */
+    long waitTime = strtol(argv[1], NULL, 10);
+
+    /* if waitTime is negative OR 0 and the first character is zero,
+       we need to exit now */
+    if(waitTime < 0 || (waitTime == 0 && argv[1][0] == '0'))
     {
-        waitTime = strtol(argv[1], NULL, 10);
-        if(waitTime < 1)
-        {
-            fprintf(stderr, INVALID_DELAY, waitTime);
-            fprintf(stderr, GENERIC_USAGE, argv[0]);
-            return EXIT_FAILURE;
-        }
-        // the racers now start at argv[2], update that offset here
-        ++racerStartIndex;
+        fprintf(stderr, INVALID_DELAY, waitTime);
+        fprintf(stderr, GENERIC_USAGE, argv[0]);
+        return EXIT_FAILURE;
+    }
+    // else if the waitTime is 0 and the first character isn't 0 it is a name
+    else if(waitTime == 0 && argv[1][0] != '0')
+    {
+        waitTime = DEFAULT_WAIT;
+        --racerStartIndex;
     }
 
     // last minute check to make sure we have enough racers
@@ -117,6 +123,7 @@ int main(int argc, char **argv)
         }
 
     // BEGIN BUILDING OUR RUN ==================================================
+
     // creates an array to house our threads in
     pthread_t racerThreads[argc-racerStartIndex];
     // creates an array to house our racer pointers
@@ -127,13 +134,14 @@ int main(int argc, char **argv)
     // initializes the racer wait
     initRacers(waitTime);
 
-    // loop to create all the racers
+    // loop to create all the racers (threads come next)
     for(int i = racerStartIndex; i < argc; ++i)
     {
         char paddedName[MAX_NAME_LEN + 1];
         padName(argv[i], paddedName);
         racers[i-racerStartIndex] = makeRacer(paddedName, i-racerStartIndex+1);
     }
+
     // clears the screen right before we go
     clear();
 

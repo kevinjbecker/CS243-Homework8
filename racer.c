@@ -9,12 +9,14 @@
 
 static long waitTime;
 
+/// sets the wait time each racer should make.
 void initRacers( long milliseconds )
 {
     // sets the wait to the milliseconds specified
     waitTime = milliseconds;
 }
 
+/// creates a heap allocated racer with name and position.
 Racer *makeRacer(char *name, int position)
 {
     // the racer we will eventually return
@@ -44,6 +46,7 @@ Racer *makeRacer(char *name, int position)
     return racer;
 }
 
+/// destroys the heap usage of the racer.
 void destroyRacer(Racer *racer)
 {
     // nothing we need to do if the racer is alread null
@@ -56,19 +59,7 @@ void destroyRacer(Racer *racer)
     free(racer);
 }
 
-/// run Run one racer in the race.
-/// Initialize the display of the racer*:
-///   The racer starts at the start position, column 1.
-///   The racer's graphic (text name ) is displayed.
-/// This action happens repetitively, until its position is at FINISH_LINE:
-///   Randomly calculate a waiting period, no more than
-///   the value given to initRacers
-///   Sleep for that length of time.
-///   Change the display position of this racer by +1 column*:
-///     Erase the racer's name from the display.
-///     Update the racer's dist field by +1.
-///     Display the racer's name at the new position.
-///
+/// thread run function which is used to simulate the race.
 void *run( void *racer )
 {
     // casts our racer to something we know
