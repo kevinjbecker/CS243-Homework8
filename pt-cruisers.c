@@ -8,10 +8,11 @@
 // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
 #define _POSIX_SOURCE
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <time.h>
 #include "display.h"
 #include "racer.h"
 
@@ -124,13 +125,16 @@ int main(int argc, char **argv)
 
     // BEGIN BUILDING OUR RUN ==================================================
 
+    /* at this point, all checks have passed, we can clear the screen
+       clears the screen right before we go */
+    clear();
+
     // creates an array to house our threads in
     pthread_t racerThreads[argc-racerStartIndex];
     // creates an array to house our racer pointers
     Racer *racers[argc-racerStartIndex];
-
-    // seeds the random generator
-    srand(10);
+    // seeds the random generator with NULL time
+    srand(time(NULL));
     // initializes the racer wait
     initRacers(waitTime);
 
@@ -142,9 +146,6 @@ int main(int argc, char **argv)
         racers[i-racerStartIndex] = makeRacer(paddedName, i-racerStartIndex+1);
     }
 
-    // clears the screen right before we go
-    clear();
-
     // create a thread for each racer
     for(int i = 0; i < argc-racerStartIndex; ++i)
         pthread_create(&racerThreads[i], NULL, run, (void *)racers[i]);
@@ -154,7 +155,7 @@ int main(int argc, char **argv)
     {
         // we don't care about the retval, we can set that to NULL
         pthread_join(racerThreads[i], NULL);
-        // destroys the racer (FUCKING SEGFAULT?????)
+        // destroys the racer
         destroyRacer(racers[i]);
     }
 

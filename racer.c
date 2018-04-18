@@ -1,12 +1,14 @@
 #define _BSD_SOURCE
-#include <unistd.h>
 #include <pthread.h>
 #include <string.h>
+#include <unistd.h>
 #include "display.h"
 #include "racer.h"
 
-#define MICRO_SEC_TO_MILLIS 1000
+// A converter from milliseconds to microseconds
+#define MILLI_SEC_TO_MICRO_SEC 1000
 
+/// global max wait time between each movement
 static long waitTime;
 
 /// sets the wait time each racer should make.
@@ -64,6 +66,7 @@ void *run( void *racer )
 {
     // casts our racer to something we know
     Racer * rcr = (Racer *)racer;
+
     // makes a mutex which is static to all threads
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -82,7 +85,7 @@ void *run( void *racer )
         // unlocks the critical region for a racer to go in
         pthread_mutex_unlock(&mutex);
         // sleeps for a random amount of time (max wait)
-        usleep((rand() % waitTime) * MICRO_SEC_TO_MILLIS);
+        usleep((rand() % waitTime) * MILLI_SEC_TO_MICRO_SEC);
     }
     return NULL;
 }
